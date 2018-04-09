@@ -94,25 +94,6 @@ void    maxHeap<T>::pop() {
     size--;
     int currIndex = 1;          // current index
     maintain(currIndex);
-    // int lc = currIndex << 1;    // left child
-    // int rc = lc | 1;            // right child
-
-    // while (lc <= size && rc <= size && (heap[currIndex] < heap[lc] || heap[currIndex] < heap[rc])) {
-    //     T   temp = heap[currIndex];
-
-    //     if (heap[lc] >= heap[rc]) {
-    //         heap[currIndex] = heap[lc];
-    //         heap[lc] = temp;
-    //         currIndex = lc;
-    //     }
-    //     else {
-    //         heap[currIndex] = heap[rc];
-    //         heap[rc] = temp;
-    //         currIndex = rc;
-    //     }
-    //     lc = currIndex << 1; rc = lc | 1;
-    // }
-    // return;
 }
 
 template    <class  T>
