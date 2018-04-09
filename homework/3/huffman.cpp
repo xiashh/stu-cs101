@@ -8,6 +8,24 @@
 using namespace std;
 
 /* data structure */
+class Node
+{
+    private:
+        unsigned int frequency;
+        unsigned char min_key;
+        unsigned char key;
+        Node * left_char;
+        Node * right_char;
+    
+    public:
+        Node () {}
+        Node (unsigned int f, unsigned char c): \
+            frequency (f), min_key (c), key (c) {}
+        Node (Node * lc, Node * rc);
+        bool operator < (const Node &);
+        void add_to_cookbook (string * book, string code);
+}
+
 template    <class T>
 class   minHeap {
     private:
@@ -109,6 +127,34 @@ void print_frequency ()
 void decompress ()
 {
     printf("now we will decompress the data.\n");
+}
+
+/* implementation of Node */
+Node::Node (Node * lc, Node rc)
+{
+    frequency = lc->frequency + rc->frequency;
+    left_char = lc;
+    right_char = rc;
+    min_key = lc->min_key > rc->min_key? rc->min_key: lc->min_key;
+}
+
+bool Node::operator < (const Node &op)
+{
+    if (frequency < op.frequency)
+        return True;
+    else if (frequency == op.frequency)
+        return min_key < op.min_key;
+    else
+        return False;
+}
+
+void Node::add_to_cookbook (string * book, string code)
+{
+    if (left_char == NULL && right_char == NULL)
+    {
+        book[key] = code;
+    }
+    else if ()
 }
 
 /* implementation of min heap */

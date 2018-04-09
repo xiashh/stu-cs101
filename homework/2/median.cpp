@@ -354,14 +354,4 @@ int main() {
         n++;
     }
 
-    // cout << max -> Size() << endl;
-    // min -> print();
-    // cout << "=========" << endl;
-    // max -> print();
-
-    // return 0;
-    // min -> push(1);
-    // min -> print();
-    // cout << min -> top() << endl;
-
 }
