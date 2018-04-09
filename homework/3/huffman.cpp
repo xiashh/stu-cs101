@@ -24,14 +24,14 @@ class Node
         Node (Node * lc, Node * rc);
         bool operator < (const Node &);
         void add_to_cookbook (string * book, string code);
-}
+};
 
 template    <class T>
 class   minHeap {
     private:
         int capacity;   // total available space
         int size;       // current used space
-        T * heap;       // array to store the data
+        T ** heap;       // array to store the data
         void    maintain(int k); // maintain the property
     
     public:
@@ -69,7 +69,7 @@ int main () {
         decompress ();
     }
     
-    minHeap<int> * min = new minHeap<int>(256);
+    minHeap<Node> * min = new minHeap<Node>(256);
 
 }
 
@@ -130,7 +130,7 @@ void decompress ()
 }
 
 /* implementation of Node */
-Node::Node (Node * lc, Node rc)
+Node::Node (Node * lc, Node * rc)
 {
     frequency = lc->frequency + rc->frequency;
     left_char = lc;
@@ -141,11 +141,11 @@ Node::Node (Node * lc, Node rc)
 bool Node::operator < (const Node &op)
 {
     if (frequency < op.frequency)
-        return True;
+        return true;
     else if (frequency == op.frequency)
         return min_key < op.min_key;
     else
-        return False;
+        return false;
 }
 
 void Node::add_to_cookbook (string * book, string code)
@@ -153,8 +153,20 @@ void Node::add_to_cookbook (string * book, string code)
     if (left_char == NULL && right_char == NULL)
     {
         book[key] = code;
+        return;
     }
-    else if ()
+    
+    if (left_char != NULL)
+    {
+        left_char->add_to_cookbook (book, code + '0');
+    }
+
+    if (right_char != NULL)
+    {
+        right_char->add_to_cookbook (book, code + '1');
+    }
+
+    return;
 }
 
 /* implementation of min heap */
@@ -163,7 +175,6 @@ minHeap<T>::minHeap(int cap) {
     capacity = cap;
     size = 0;
     heap = new T[cap];
-    heap[0] = 0;
 }
 
 template    <class  T>
