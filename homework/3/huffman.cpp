@@ -110,7 +110,8 @@ void compress ()
     Node * tree_root = build_huffman_tree ();
     string code;
 
-    tree_root->add_to_codebook (code);
+    if (tree_root != NULL)
+        tree_root->add_to_codebook (code);
     // print_codebook (book);
     print_uncompressed_data ();
 
@@ -275,7 +276,6 @@ bool Node::operator < (const Node &op)
 
 void Node::add_to_codebook (string code)
 {
-    cout <<"debug"<<endl;        
     if (left_char == NULL && right_char == NULL)
     {
         book[key] = code;
