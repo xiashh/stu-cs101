@@ -239,7 +239,11 @@ Node * build_huffman_tree ()
 /* decompress the data and print it */
 void decompress ()
 {
-    printf("now we will decompress the data.\n");
+    unsigned char c;
+    cin >> noskipws;
+    
+    for (int i = 0; i < 8; i++)
+        cin >> c;
     
 }
 
