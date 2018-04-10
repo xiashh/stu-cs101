@@ -65,8 +65,8 @@ void compress ();
 void decompress ();
 Node * build_huffman_tree ();
 void print_codebook (string *); 
+void print_compressed_data ();
 void print_uncompressed_data ();
-uint32_t little_endian(uint32_t );
 
 int main () {
     decide_action ();
@@ -79,9 +79,6 @@ int main () {
     {
         decompress ();
     }
-    
-    minHeap<Node> * min = new minHeap<Node>;
-
 }
 
 /* decide whether decode(0) the data or encode(1) the data */
@@ -91,7 +88,7 @@ int decide_action ()
     string arg;
     cin >> noskipws;
 
-    decode_or_encode = -1;
+    decode_or_encode = 0;
     for (int i = 0; i < 6; i++)
     {
         cin >> c;
@@ -112,8 +109,7 @@ void compress ()
 
     if (tree_root != NULL)
         tree_root->add_to_codebook (code);
-    // print_codebook (book);
-    print_uncompressed_data ();
+    print_compressed_data ();
 
 }
 
@@ -155,7 +151,7 @@ void print_codebook (string * book)
 }
 
 /* print the uncompressed data */
-void print_uncompressed_data ()
+void print_compressed_data ()
 {
     cout <<"HUFFMAN"<<'\0';
 
@@ -241,10 +237,44 @@ void decompress ()
 {
     unsigned char c;
     cin >> noskipws;
+    string code;
     
     for (int i = 0; i < 8; i++)
         cin >> c;
+
+    for (int i = 0; i < 256; i++)
+        cin.read ((char *) &frequencies[i], 4);
+
+    Node * tree_root = build_huffman_tree ();
+
+    if (tree_root != NULL)
+        tree_root->add_to_codebook (code);
     
+    print_uncompressed_data ();
+}
+
+void print_uncompressed_data ()
+{
+    unsigned char buffer;
+    string s = "";
+    while (cin >> buffer)
+    {
+        for (int i = 0; i < 8; i++)
+        {
+            if ((buffer >> i) & 0x01)
+                s += '1';
+            else
+                s += '0';
+            for (int j = 0; j < 256; j++)
+                if (book[j] == s && frequencies[j] > 0)
+                {
+                    cout << (char)j;
+                    s.clear ();
+                    frequencies[j]--;
+                    break;
+                }
+        }
+    }
 }
 
 /* implementation of Node */
