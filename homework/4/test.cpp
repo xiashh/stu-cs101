@@ -1,5 +1,6 @@
 #include <iostream>   // std::cout
 #include <string>     // std::string, std::stoi
+#include <cmath>
 
 
 using namespace std;
@@ -9,17 +10,13 @@ bool is_number(const std::string& s);
 
 int main ()
 {
-    string s = "12";
-    int hash_code = 0;
-    int str_len= s.size ();
-    int n = 0;
+    string s = "rês";
+    unsigned int a = (unsigned char) 'a';
 
-    for (int i = 0; i < str_len; i++)
-    {
-        hash_code += (s[i] * quick_mod (2, 8*(str_len-i-1), 39)) % 39;
-    }
+    cout << a << endl;
 
-    cout << stoi(s, nullptr, 10) + 1<< endl;
+
+    
 
 }
 

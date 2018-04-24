@@ -3,13 +3,13 @@
 #include <istream>
 #include <ostream>
 #include <sstream>
+#include <cmath>
 
 using namespace std;
 
 /* data structure */
 struct Node 
 {
-    int type;       // 1 is num ,2 is string
     unsigned int count;
     string str;
     Node * next;
@@ -90,18 +90,19 @@ class   single_list {
 };
 
 /* global variable */
-static int table_length = 0;
-static int load_factor = 0;
-static int current_size = 0;
-static int list_size = 100;
+static unsigned int table_length = 0;
+static unsigned int load_factor = 0;
+static unsigned int current_size = 0;
+static unsigned int list_size = 100;
 single_list ** hash_table;
 
-int quick_mod (int, int, int);
+unsigned int quick_mod (int, int, int);
 bool is_number(const string & s);
 void resize_hash_table ();
 void insert_to_table ();
 void erase_from_table ();
 void print_table ();
+unsigned int cal_hash_code (string, unsigned int);
 
 int main ()
 {
@@ -122,7 +123,7 @@ int main ()
     print_table ();
 }
 
-int quick_mod (int n, int p, int mod)
+unsigned int quick_mod (int n, int p, int mod)
 {
     if (p == 0)
         return 1;
@@ -153,7 +154,7 @@ bool is_number(const string & s)
 
 void resize_hash_table ()
 {
-    int new_length = table_length*2 + 1;
+    unsigned int new_length = table_length*2 + 1;
     single_list ** new_ht = new single_list * [new_length];
     for (int i = 0; i < new_length; i++)
         new_ht[i] = new single_list(list_size);
@@ -163,21 +164,10 @@ void resize_hash_table ()
         Node * current = hash_table[i]->top();
         while (current)
         {
-            int hash_code = 0;
             string s = current->str;
-            if (current->type == 1)
-            {
-                hash_code = stoi(s, nullptr, 10) % new_length;
-            }
-            else
-            {
-                for (int i = 0; i < s.size (); i++)
-                    hash_code += (s[i] * quick_mod (2, 8*(s.size ()-i-1), new_length)) % new_length;
-                hash_code %= new_length;
-            }
+            unsigned int hash_code = cal_hash_code (s, new_length);
             new_ht[hash_code]->insert(s);
             new_ht[hash_code]->top()->count = current->count;
-            new_ht[hash_code]->top()->type = current->type;
             current = current->next;
         }
     }
@@ -197,25 +187,13 @@ void insert_to_table ()
         if (s == "************************")
             break;
         
-        if (current_size * 100 > table_length * load_factor)
+        
+        if ((current_size+1)* 100 > table_length * load_factor)
         {
             resize_hash_table ();
         }
 
-        int hash_code = 0;
-        int t = 0;
-        if (is_number (s))
-        {
-            hash_code = stoi(s, nullptr, 10) % table_length;
-            t = 1;
-        }
-        else
-        {
-            for (int i = 0; i < s.size (); i++)
-                hash_code += (s[i] * quick_mod (2, 8*(s.size ()-i-1), table_length)) % table_length;
-            t = 2;
-            hash_code %= table_length;
-        }
+        unsigned int hash_code = cal_hash_code (s, table_length);
         
         if (hash_table[hash_code]->find(s))
         {
@@ -224,9 +202,9 @@ void insert_to_table ()
         else
         {
             hash_table[hash_code]->insert(s);
-            hash_table[hash_code]->find(s)->type = t;                
             current_size++;
         }
+
     }
 }
 
@@ -262,18 +240,32 @@ void erase_from_table ()
         if (s == "************************")
             break;
 
-        int hash_code = 0;
-        if (is_number (s))
-        {
-            hash_code = stoi(s, nullptr, 10) % table_length;
-        }
-        else
-        {
-            for (int i = 0; i < s.size (); i++)
-                hash_code += (s[i] * quick_mod (2, 8*(s.size ()-i-1), table_length)) % table_length;
-            hash_code %= table_length;
-        }
+        unsigned int hash_code = cal_hash_code (s, table_length);
         hash_table[hash_code]->erase (s);
         current_size--;
     }
+}
+
+unsigned int cal_hash_code (string s, unsigned int mod)
+{
+    unsigned int hash_code = 0;
+
+    if (is_number (s))
+        {
+            unsigned long int num;
+            sscanf(s.c_str(), "%ld", &num);
+            hash_code = num % mod;
+        }
+    else
+    {
+        for (int i = 0; i < s.size (); i++)
+        {
+            unsigned int n = (unsigned char)s[i];
+            unsigned int m = quick_mod (2, 8*(s.size ()-i-1), mod);
+            hash_code += ((n % mod) * m) % mod;
+        }
+        hash_code %= mod;
+    }
+
+    return hash_code;
 }
