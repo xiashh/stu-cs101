@@ -1,5 +1,4 @@
 #include <string>
-#include <regex>
 #include <iostream>
 #include <istream>
 #include <ostream>
@@ -92,8 +91,9 @@ class   single_list {
 
 /* global variable */
 static int table_length = 0;
-static int list_size = 0;
+static int load_factor = 0;
 static int current_size = 0;
+static int list_size = 100;
 single_list ** hash_table;
 
 int quick_mod (int, int, int);
@@ -106,8 +106,11 @@ void print_table ();
 int main ()
 {
     // initial length and size
-    cin >> list_size;
+    cin >> load_factor;
     cin >> table_length;
+
+    if (load_factor == 0)
+        return -1;
 
     // initialize the hash table
     hash_table = new single_list * [table_length];
@@ -194,7 +197,7 @@ void insert_to_table ()
         if (s == "************************")
             break;
         
-        if (current_size * 100 > table_length * list_size)
+        if (current_size * 100 > table_length * load_factor)
         {
             resize_hash_table ();
         }
