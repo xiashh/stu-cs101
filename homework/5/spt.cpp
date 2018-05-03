@@ -14,11 +14,39 @@ struct Node
     Node * parent;
 };
 
-struct Edge
+class Edge
 {
-    int weight;
-    int sp;
-    int ep;
+    private:
+        int weight;
+        int start;
+        int end;
+
+    public:
+        Edge (int w, int sp, int ep): \
+            weight (w), start (sp), end (ep) {}
+        bool operator < (const Edge &);
+        bool operator > (const Edge &);
+        int get_weight ();
+        int get_start ();
+        int get_end ();
+};
+
+template    <class T>
+class   minHeap {
+    private:
+        int capacity;   // total available space
+        int size;       // current used space
+        T ** heap;       // array to store the data
+        void    maintain(int k); // maintain the property
+    
+    public:
+        minHeap(int);
+        ~minHeap();
+        int get_size ();         // return the size
+        T   *top();     // show the maximum value
+        void    pop();      // remove the minimum value
+        void    push(T * data);     // insert a new value using bottom up
+        void    print();    // print the max heap        
 };
 
 class disjoint_set
@@ -40,7 +68,9 @@ static int num_cities;
 static int num_roads;
 static int num_regions;
 
-void print_disjoint_set (const disjoint_set *);
+void print_disjoint_set (disjoint_set *);
+void read_old_reads (minHeap<Edge> *);
+void build_new_reads (disjoint_set *, minHeap<Edge> *);
 
 int main ()
 {
@@ -49,36 +79,15 @@ int main ()
     cin >> num_roads;
     cin >> num_regions;
 
-    disjoint_set * regions = new disjoint_set (num_cities);
-    Edge * old_roads = new Edge [num_roads];
+    disjoint_set * Regions = new disjoint_set (num_cities);
+    minHeap<Edge> * Edges = new minHeap<Edge>(num_roads);
     
-    // read old roads
-    string old_road;
-    int count = 0;
-    while (getline (cin, old_road))
-    {
-        if (old_road.empty())
-            continue;
-        
-        // append to old_reads
-        Edge * road = &old_roads[count++];
-        sscanf(old_road.c_str(), "%d %d %d", &road->sp, &road->ep, &road->weight);
-    }
-
-    // build new roads
-
-
-
-
-    // for debugging
-    // for (int i = 0; i < num_roads; i++)
-    // {
-    //     printf("sp:%d, ep:%d, weight:%d\n", old_roads[i].sp, old_roads[i].ep, old_roads[i].weight);
-    // }
-
+    read_old_reads (Edges);
+    build_new_reads (Regions, Edges);
+    print_disjoint_set (Regions);
     return 0;
 }
-/* implementation */
+/* implementation of disjoint set */
 disjoint_set::disjoint_set (int n)
 {
     size = n;
@@ -134,4 +143,173 @@ void disjoint_set::set_union (int i, int j)
         }
     this->size--;
     return;
+}
+
+/* implementation of Edge and minHeap */
+bool Edge::operator < (const Edge & op)
+{
+    if (this->weight < op.weight)
+        return true;
+    else if (this->weight == op.weight)
+    {
+
+        if (min (this->start, this->end) < min(op.start, op.end))
+            return true;
+        else if (min (this->start, this->end) == min(op.start, op.end))
+            return max (this->start, this->end) < max (op.start, op.end);
+    }
+    else
+        return false;
+}
+
+bool Edge::operator > (const Edge & op)
+{
+    if (this->weight > op.weight)
+        return true;
+    else if (this->weight == op.weight)
+    {
+
+        if (min (this->start, this->end) > min(op.start, op.end))
+            return true;
+        else if (min (this->start, this->end) == min(op.start, op.end))
+            return max (this->start, this->end) > max (op.start, op.end);
+    }
+    else
+        return false;
+}
+
+int Edge::get_weight ()
+{
+    return this->weight;
+}
+
+int Edge::get_start ()
+{
+    return this->start;
+}
+
+int Edge::get_end ()
+{
+    return this->end;
+}
+
+template    <class  T>
+minHeap<T>::minHeap(int n) {
+    capacity = n;
+    size = 0;
+    heap = new T * [n];
+}
+
+template    <class  T>
+minHeap<T>::~minHeap() {
+    size = 0;
+    capacity = 0;
+    delete[] heap;
+}
+
+template    <class  T>
+int minHeap<T>::get_size () {
+    return size;
+}
+
+template    <class  T>
+T   * minHeap<T>::top() {
+    return heap[1];
+}
+
+template    <class  T>
+void    minHeap<T>::maintain(int k) {
+    int currIndex = k;          // current index
+    int lc = currIndex << 1;    // left child
+    int rc = lc | 1;            // right child
+    T   *temp = heap[currIndex];
+
+    if (lc <= size && rc > size && *heap[lc] < *temp) {
+        heap[currIndex] = heap[lc];
+        heap[lc] = temp;
+        maintain(lc);
+    }
+    else if (lc <= size && rc <= size && (*temp > *heap[lc] || *temp > *heap[rc])) {
+        if (*heap[lc] < *heap[rc]) {
+            heap[currIndex] = heap[lc];
+            heap[lc] = temp;
+            maintain(lc);
+        }
+        else {
+            heap[currIndex] = heap[rc];
+            heap[rc] = temp;
+            maintain(rc);
+        }
+    }
+    return;
+}
+
+template    <class  T>
+void    minHeap<T>::pop() {
+    heap[1] = heap[size];
+    size--;
+    int currIndex = 1;       
+    maintain(currIndex);
+    return;
+}
+
+template    <class  T>
+void    minHeap<T>::push(T  * data) {
+    size++;
+    heap[size] = data;
+    
+    int currIndex = size;          // current index
+    int parent = currIndex >> 1;        // parent index
+    
+    while (parent >= 1 && *heap[currIndex] < *heap[parent]) {
+        T   *temp = heap[currIndex];
+        heap[currIndex] = heap[parent];
+        heap[parent] = temp;
+        currIndex = parent;
+        parent = currIndex >> 1;
+    }
+    return;
+}
+
+void read_old_reads (minHeap<Edge> * edges)
+{
+    // read old roads
+    string s;
+    int count = 0;
+    while (getline (cin, s))
+    {
+        if (s.empty())
+            continue;
+        
+        // append to old_reads
+        int sp, ep, weight;
+        sscanf(s.c_str(), "%d %d %d", &sp, &ep, &weight);
+        Edge * old_road = new Edge(weight, sp, ep);
+        edges->push (old_road);
+    }
+}
+
+void build_new_reads (disjoint_set * regions, minHeap<Edge> * edges)
+{
+    int start, end;
+
+    while (regions->get_size () > num_regions)
+    {
+        Edge * new_road = edges->top ();
+        cout << new_road->get_weight () << endl;
+        start = new_road->get_start ();
+        end = new_road->get_end ();
+        regions->set_union(start, end);
+        edges->pop ();
+    }
+}
+
+void print_disjoint_set (disjoint_set * regions)
+{
+    int real_regions[regions->get_size ()];
+
+    for (int i = 0, j = 0; i < num_cities; i++)
+        if (regions->find(i)->value == i)
+            real_regions[j++] = i;
+    printf("[\n");
 }
