@@ -3,6 +3,8 @@
 #include <istream>
 #include <ostream>
 #include <sstream>
+#include <stdlib.h>
+#include <stdio.h>
 
 using namespace std;
 
@@ -22,6 +24,7 @@ class Edge
         int end;
 
     public:
+        Edge () {}
         Edge (int w, int sp, int ep): \
             weight (w), start (sp), end (ep) {}
         bool operator < (const Edge &);
@@ -60,7 +63,7 @@ class disjoint_set
         ~disjoint_set ();
         int get_size ();
         Node * find (int);
-        void set_union (int, int);
+        bool set_union (int, int);
 };
 
 /* global variable */
@@ -68,9 +71,9 @@ static int num_cities;
 static int num_roads;
 static int num_regions;
 
-void print_disjoint_set (disjoint_set *);
+void print_disjoint_set (disjoint_set *, Edge * edges);
 void read_old_reads (minHeap<Edge> *);
-void build_new_reads (disjoint_set *, minHeap<Edge> *);
+Edge *  build_new_reads (disjoint_set *, minHeap<Edge> *);
 
 int main ()
 {
@@ -81,10 +84,11 @@ int main ()
 
     disjoint_set * Regions = new disjoint_set (num_cities);
     minHeap<Edge> * Edges = new minHeap<Edge>(num_roads);
+    Edge * new_roads;
     
     read_old_reads (Edges);
-    build_new_reads (Regions, Edges);
-    print_disjoint_set (Regions);
+    new_roads = build_new_reads (Regions, Edges);
+    print_disjoint_set (Regions, new_roads);
     return 0;
 }
 /* implementation of disjoint set */
@@ -124,25 +128,28 @@ Node * disjoint_set::find (int i)
         return parent[i]->parent;
     }
 }
-void disjoint_set::set_union (int i, int j)
+bool disjoint_set::set_union (int i, int j)
 {
     Node * ni = find(i);
     Node * nj = find(j);
     if (ni->value == nj->value)
-        return;
+        return false;
     else
-        if (ni->size >= nj->size)
+        if (ni->size > nj->size)
+        {
+            nj->parent = ni;
+        }
+        else if (ni->size < nj->size)
+        {
+            ni->parent = nj;
+        }
+        else
         {
             nj->parent = ni;
             ni->size++;
         }
-        else
-        {
-            ni->parent = nj;
-            nj->size++;
-        }
     this->size--;
-    return;
+    return true;
 }
 
 /* implementation of Edge and minHeap */
@@ -289,27 +296,39 @@ void read_old_reads (minHeap<Edge> * edges)
     }
 }
 
-void build_new_reads (disjoint_set * regions, minHeap<Edge> * edges)
+Edge *  build_new_reads (disjoint_set * regions, minHeap<Edge> * edges)
 {
-    int start, end;
+    int start, end, weight, count;
+    Edge * new_roads = new Edge [num_roads];
 
     while (regions->get_size () > num_regions)
     {
         Edge * new_road = edges->top ();
-        cout << new_road->get_weight () << endl;
         start = new_road->get_start ();
         end = new_road->get_end ();
-        regions->set_union(start, end);
+        weight = new_road->get_weight ();
+        if (regions->set_union (start, end))
+        {
+            new_roads[count++] = Edge(weight, start, end);
+        }
         edges->pop ();
     }
+
+    return new_roads;
 }
 
-void print_disjoint_set (disjoint_set * regions)
+void print_disjoint_set (disjoint_set * regions, Edge * edges)
 {
     int real_regions[regions->get_size ()];
+    int num_real_regions,count;
 
-    for (int i = 0, j = 0; i < num_cities; i++)
+    for (int i = 0; i < num_cities; i++)
+    {
         if (regions->find(i)->value == i)
-            real_regions[j++] = i;
+            real_regions[num_real_regions++] = i;
+        count = regions->find(i)->value;
+        printf("%d\n", count);
+    }
+
     printf("[\n");
 }
