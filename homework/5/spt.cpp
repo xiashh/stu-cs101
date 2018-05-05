@@ -9,9 +9,17 @@
 using namespace std;
 
 /* data structure */
+struct Region 
+{
+    int root = -1;
+    int size = 0;
+    int minCity = -1;
+    int * cities;
+};
+
 struct Node
 {
-    int size;
+    int height;
     int value;
     Node * parent;
 };
@@ -19,9 +27,9 @@ struct Node
 class Edge
 {
     private:
-        int weight;
-        int start;
-        int end;
+        int weight = 0;
+        int start = -1;
+        int end = -1;
 
     public:
         Edge () {}
@@ -74,6 +82,8 @@ static int num_regions;
 void print_disjoint_set (disjoint_set *, Edge * edges);
 void read_old_reads (minHeap<Edge> *);
 Edge *  build_new_reads (disjoint_set *, minHeap<Edge> *);
+int compare_region (const void *, const void *);
+int compare_edge (const void * , const void * );
 
 int main ()
 {
@@ -101,7 +111,7 @@ disjoint_set::disjoint_set (int n)
     {
         parent[i] = new Node;
         parent[i]->parent = parent[i];
-        parent[i]->size = 1;
+        parent[i]->height = 0;
         parent[i]->value = i;
     }
 }
@@ -135,18 +145,18 @@ bool disjoint_set::set_union (int i, int j)
     if (ni->value == nj->value)
         return false;
     else
-        if (ni->size > nj->size)
+        if (ni->height > nj->height)
         {
             nj->parent = ni;
         }
-        else if (ni->size < nj->size)
+        else if (ni->height < nj->height)
         {
             ni->parent = nj;
         }
         else
         {
             nj->parent = ni;
-            ni->size++;
+            ni->height++;
         }
     this->size--;
     return true;
@@ -298,8 +308,10 @@ void read_old_reads (minHeap<Edge> * edges)
 
 Edge *  build_new_reads (disjoint_set * regions, minHeap<Edge> * edges)
 {
-    int start, end, weight, count;
+    int start, end, weight;
+    int count = 0;
     Edge * new_roads = new Edge [num_roads];
+    
 
     while (regions->get_size () > num_regions)
     {
@@ -317,18 +329,122 @@ Edge *  build_new_reads (disjoint_set * regions, minHeap<Edge> * edges)
     return new_roads;
 }
 
+int compare_region (const void * a, const void * b)
+{
+    Region * A = (Region*)a;
+    Region * B = (Region*)b;
+
+    if (A->size != B->size)
+        return - A->size + B->size;
+    else
+    {
+        return - A->minCity + B->minCity;
+    }
+}
+
+int compare_edge (const void * a, const void * b)
+{
+    Edge * A = (Edge*)a;
+    Edge * B = (Edge*)b;
+
+    if (A->get_weight () < B->get_weight ())
+        return 1;
+    else if (A->get_weight () == B->get_weight ())
+    {
+
+        if (min (A->get_start (), A->get_end ()) < min(B->get_start (), B->get_end ()))
+            return 1;
+        else if (min (A->get_start (), A->get_end ()) == min(B->get_start (), B->get_end ()))
+            return max (A->get_start (), A->get_end ()) < max (B->get_start (), B->get_end ());
+    }
+    else
+        return -1;
+}
+
 void print_disjoint_set (disjoint_set * regions, Edge * edges)
 {
-    int real_regions[regions->get_size ()];
-    int num_real_regions,count;
+    int num_real_regions = regions->get_size ();
+    Region * real_regions = new Region[num_real_regions];
 
-    for (int i = 0; i < num_cities; i++)
+    // record root
+    for (int i = 0; i < num_real_regions;)
     {
-        if (regions->find(i)->value == i)
-            real_regions[num_real_regions++] = i;
-        count = regions->find(i)->value;
-        printf("%d\n", count);
+        for (int j = 0; j < num_cities; j++)
+        {
+            if (regions->find(j)->value == j)
+            {
+                real_regions[i].root = j;
+                i++;
+            }
+        }
     }
 
+    // record nodes
+    for (int i = 0; i < num_real_regions; i++)
+    {
+        for (int j = 0; j < num_cities; j++)
+        {
+            if (regions->find(j)->value == real_regions[i].root)
+            {
+                real_regions[i].size++;
+                if (j < real_regions[i].minCity)
+                    real_regions[i].minCity = j;
+            }
+        }
+    }
+
+
+    for (int i = 0; i < num_real_regions; i++)
+    {
+        real_regions[i].cities = new int[real_regions[i].size];
+        int k = 0;
+        for (int j = 0; j < num_cities; j++)
+        {
+            if (regions->find(j)->value == real_regions[i].root)
+            {
+                real_regions[i].cities[k++] = j;
+            }
+        }
+    }
+
+    qsort (real_regions, num_real_regions, sizeof(Region), compare_region);
+    
+    // print mst
     printf("[\n");
+    
+    for (int i = 0; i < num_real_regions; i++)
+    {
+        printf("[\n");
+        Edge new_roads[real_regions[i].size-1];
+        int n = 0;
+        for (int j = 0; j < real_regions[i].size; j++)
+        {
+            int city = real_regions[i].cities[j];
+            for (int k = num_cities-1;k > -1;k--)
+            {
+                if (edges[k].get_weight () && \
+                        city == edges[k].get_start ())
+                {
+                    new_roads[n++] = Edge(edges[k].get_weight (),\
+                            edges[k].get_start (), edges[k].get_end ());
+                }
+            }
+        }
+        qsort (new_roads, real_regions[i].size-1, \
+                sizeof(Edge), compare_edge);
+        for (int j = 0; j < real_regions[i].size-1; j++)
+        {
+            printf("[%d,%d,%d]",new_roads[j].get_start(), \
+                   new_roads[j].get_end (), new_roads[j].get_weight ());
+            if (j == real_regions[i].size - 2)
+                printf("\n");
+            else
+                printf(",\n");
+        }
+        if (i == num_real_regions - 1)
+            printf("]\n");
+        else
+            printf("],\n");
+    }
+    printf("]\n");
 }
