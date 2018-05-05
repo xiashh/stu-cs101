@@ -5,15 +5,22 @@
 #include <sstream>
 #include <stdlib.h>
 #include <stdio.h>
+#include <limits>
+#include <time.h>
 
 using namespace std;
+
+/* global variable */
+static int num_cities;
+static int num_roads;
+static int num_regions;
 
 /* data structure */
 struct Region 
 {
     int root = -1;
     int size = 0;
-    int minCity = -1;
+    int minCity = num_cities;
     int * cities;
 };
 
@@ -27,7 +34,7 @@ struct Node
 class Edge
 {
     private:
-        int weight = 0;
+        long weight = 0;
         int start = -1;
         int end = -1;
 
@@ -74,11 +81,6 @@ class disjoint_set
         bool set_union (int, int);
 };
 
-/* global variable */
-static int num_cities;
-static int num_roads;
-static int num_regions;
-
 void print_disjoint_set (disjoint_set *, Edge * edges);
 void read_old_reads (minHeap<Edge> *);
 Edge *  build_new_reads (disjoint_set *, minHeap<Edge> *);
@@ -88,9 +90,7 @@ int compare_edge (const void * , const void * );
 int main ()
 {
     // obtain parameters
-    cin >> num_cities;
-    cin >> num_roads;
-    cin >> num_regions;
+    cin >> num_cities >> num_roads >> num_regions;
 
     disjoint_set * Regions = new disjoint_set (num_cities);
     minHeap<Edge> * Edges = new minHeap<Edge>(num_roads);
@@ -291,16 +291,13 @@ void    minHeap<T>::push(T  * data) {
 void read_old_reads (minHeap<Edge> * edges)
 {
     // read old roads
-    string s;
     int count = 0;
-    while (getline (cin, s))
+    for (int i = 0; i < num_roads; i++)
     {
-        if (s.empty())
-            continue;
-        
         // append to old_reads
-        int sp, ep, weight;
-        sscanf(s.c_str(), "%d %d %d", &sp, &ep, &weight);
+        int sp, ep;
+        long weight;
+        cin>> sp >> ep >> weight;
         Edge * old_road = new Edge(weight, sp, ep);
         edges->push (old_road);
     }
@@ -308,7 +305,8 @@ void read_old_reads (minHeap<Edge> * edges)
 
 Edge *  build_new_reads (disjoint_set * regions, minHeap<Edge> * edges)
 {
-    int start, end, weight;
+    int start, end;
+    long weight;
     int count = 0;
     Edge * new_roads = new Edge [num_roads];
     
@@ -316,6 +314,9 @@ Edge *  build_new_reads (disjoint_set * regions, minHeap<Edge> * edges)
     while (regions->get_size () > num_regions)
     {
         Edge * new_road = edges->top ();
+        edges->pop ();
+        if (new_road == nullptr)
+            break;
         start = new_road->get_start ();
         end = new_road->get_end ();
         weight = new_road->get_weight ();
@@ -323,7 +324,6 @@ Edge *  build_new_reads (disjoint_set * regions, minHeap<Edge> * edges)
         {
             new_roads[count++] = Edge(weight, start, end);
         }
-        edges->pop ();
     }
 
     return new_roads;
@@ -343,7 +343,7 @@ int compare_region (const void * a, const void * b)
 }
 
 int compare_edge (const void * a, const void * b)
-{
+{ 
     Edge * A = (Edge*)a;
     Edge * B = (Edge*)b;
 
@@ -420,10 +420,9 @@ void print_disjoint_set (disjoint_set * regions, Edge * edges)
         for (int j = 0; j < real_regions[i].size; j++)
         {
             int city = real_regions[i].cities[j];
-            for (int k = num_cities-1;k > -1;k--)
+            for (int k = num_roads-1;k > -1;k--)
             {
-                if (edges[k].get_weight () && \
-                        city == edges[k].get_start ())
+                if (city == edges[k].get_start ())
                 {
                     new_roads[n++] = Edge(edges[k].get_weight (),\
                             edges[k].get_start (), edges[k].get_end ());
@@ -434,8 +433,13 @@ void print_disjoint_set (disjoint_set * regions, Edge * edges)
                 sizeof(Edge), compare_edge);
         for (int j = 0; j < real_regions[i].size-1; j++)
         {
-            printf("[%d,%d,%d]",new_roads[j].get_start(), \
-                   new_roads[j].get_end (), new_roads[j].get_weight ());
+            int s = new_roads[j].get_start();
+            int e = new_roads[j].get_end ();
+            if (s < e)
+                printf("[%d,%d,%d]", s, e, new_roads[j].get_weight ());
+            else
+                printf("[%d,%d,%d]", e, s, new_roads[j].get_weight ());
+                
             if (j == real_regions[i].size - 2)
                 printf("\n");
             else
