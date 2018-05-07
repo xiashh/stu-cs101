@@ -2,8 +2,8 @@ import random
 
 
 num_nodes = 10000
-num_edges = 100
-max_dis = 12379781231213
+num_edges = 10000
+max_dis = 12379
 max_regions = 1
 
 print(num_nodes)

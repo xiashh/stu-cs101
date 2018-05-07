@@ -95,10 +95,17 @@ int main ()
     disjoint_set * Regions = new disjoint_set (num_cities);
     minHeap<Edge> * Edges = new minHeap<Edge>(num_roads);
     Edge * new_roads;
-    
+    clock_t t1 = clock ();
+
     read_old_reads (Edges);
+    // cout << ((float)clock () - t1) / CLOCKS_PER_SEC << endl;
+    // t1 = clock ();
     new_roads = build_new_reads (Regions, Edges);
+    // cout << ((float)clock () - t1) / CLOCKS_PER_SEC << endl;
+    // t1 = clock ();
     print_disjoint_set (Regions, new_roads);
+    // cout << ((float)clock () - t1) / CLOCKS_PER_SEC << endl;
+    // t1 = clock ();
     return 0;
 }
 /* implementation of disjoint set */
@@ -334,12 +341,17 @@ int compare_region (const void * a, const void * b)
     Region * A = (Region*)a;
     Region * B = (Region*)b;
 
-    if (A->size != B->size)
-        return - A->size + B->size;
-    else
+    if (A->size > B->size)
+        return -1;
+    else if (A->size == B->size)
     {
-        return - A->minCity + B->minCity;
+        if (A->minCity < B->minCity)
+            return 1;
+        else
+            return -1;
     }
+    else
+        return 1;
 }
 
 int compare_edge (const void * a, const void * b)
@@ -355,7 +367,11 @@ int compare_edge (const void * a, const void * b)
         if (min (A->get_start (), A->get_end ()) < min(B->get_start (), B->get_end ()))
             return 1;
         else if (min (A->get_start (), A->get_end ()) == min(B->get_start (), B->get_end ()))
-            return max (A->get_start (), A->get_end ()) < max (B->get_start (), B->get_end ());
+            if (max (A->get_start (), A->get_end ()) < max (B->get_start (), B->get_end ()))
+                return 1;
+            else 
+                return -1;
+        else return -1;
     }
     else
         return -1;
@@ -365,6 +381,9 @@ void print_disjoint_set (disjoint_set * regions, Edge * edges)
 {
     int num_real_regions = regions->get_size ();
     Region * real_regions = new Region[num_real_regions];
+    //
+    clock_t t1;
+    t1 = clock ();
 
     // record root
     for (int i = 0; i < num_real_regions;)
@@ -378,6 +397,9 @@ void print_disjoint_set (disjoint_set * regions, Edge * edges)
             }
         }
     }
+
+    cout << ((float)clock () - t1) / CLOCKS_PER_SEC << endl;
+    t1 = clock ();
 
     // record nodes
     for (int i = 0; i < num_real_regions; i++)
@@ -393,6 +415,8 @@ void print_disjoint_set (disjoint_set * regions, Edge * edges)
         }
     }
 
+    cout << ((float)clock () - t1) / CLOCKS_PER_SEC << endl;
+    t1 = clock ();
 
     for (int i = 0; i < num_real_regions; i++)
     {
@@ -407,6 +431,9 @@ void print_disjoint_set (disjoint_set * regions, Edge * edges)
         }
     }
 
+    cout << ((float)clock () - t1) / CLOCKS_PER_SEC << endl;
+    t1 = clock ();
+
     qsort (real_regions, num_real_regions, sizeof(Region), compare_region);
     
     // print mst
@@ -415,9 +442,10 @@ void print_disjoint_set (disjoint_set * regions, Edge * edges)
     for (int i = 0; i < num_real_regions; i++)
     {
         printf("[\n");
-        Edge new_roads[real_regions[i].size-1];
+        int size_region = real_regions[i].size;
+        Edge new_roads[size_region-1];
         int n = 0;
-        for (int j = 0; j < real_regions[i].size; j++)
+        for (int j = 0; j < size_region; j++)
         {
             int city = real_regions[i].cities[j];
             for (int k = num_roads-1;k > -1;k--)
@@ -429,18 +457,21 @@ void print_disjoint_set (disjoint_set * regions, Edge * edges)
                 }
             }
         }
-        qsort (new_roads, real_regions[i].size-1, \
+        
+        qsort (new_roads, size_region-1, \
                 sizeof(Edge), compare_edge);
-        for (int j = 0; j < real_regions[i].size-1; j++)
+
+        for (int j = 0; j < size_region-1; j++)
         {
             int s = new_roads[j].get_start();
             int e = new_roads[j].get_end ();
+            int w = new_roads[j].get_weight ();
             if (s < e)
-                printf("[%d,%d,%d]", s, e, new_roads[j].get_weight ());
+                printf("[%d,%d,%d]", s, e, w);
             else
-                printf("[%d,%d,%d]", e, s, new_roads[j].get_weight ());
+                printf("[%d,%d,%d]", e, s, w);
                 
-            if (j == real_regions[i].size - 2)
+            if (j == size_region - 2)
                 printf("\n");
             else
                 printf(",\n");
@@ -450,5 +481,7 @@ void print_disjoint_set (disjoint_set * regions, Edge * edges)
         else
             printf("],\n");
     }
+    cout << ((float)clock () - t1) / CLOCKS_PER_SEC << endl;
+    t1 = clock ();
     printf("]\n");
 }
