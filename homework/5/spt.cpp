@@ -408,51 +408,50 @@ void print_disjoint_set (disjoint_set * regions, Edge * edges)
 
     qsort (real_regions, num_real_regions, sizeof(Region), compare_region);
     
-    cout << real_regions[12].root << endl;
     // // print mst
-    // printf("[\n");
+    printf("[\n");
     
-    // for (int i = 0; i < num_real_regions; i++)
-    // {
-    //     printf("[\n");
-    //     int size_region = real_regions[i].size;
-    //     Edge new_roads[size_region-1];
-    //     int n = 0;
-    //     for (int j = 0; j < size_region; j++)
-    //     {
-    //         int city = real_regions[i].cities[j];
-    //         for (int k = num_roads-1;k > -1;k--)
-    //         {
-    //             if (city == edges[k].get_start ())
-    //             {
-    //                 new_roads[n++] = Edge(edges[k].get_weight (),\
-    //                         edges[k].get_start (), edges[k].get_end ());
-    //             }
-    //         }
-    //     }
+    for (int i = 0; i < num_real_regions; i++)
+    {
+        printf("[\n");
+        int size_region = real_regions[i].size;
+        Edge new_roads[size_region-1];
+        int n = 0;
+        for (int j = 0; j < size_region; j++)
+        {
+            int city = real_regions[i].cities[j];
+            for (int k = num_roads-1;k > -1;k--)
+            {
+                if (city == edges[k].get_start ())
+                {
+                    new_roads[n++] = Edge(edges[k].get_weight (),\
+                            edges[k].get_start (), edges[k].get_end ());
+                }
+            }
+        }
         
-    //     qsort (new_roads, size_region-1, \
-    //             sizeof(Edge), compare_edge);
+        qsort (new_roads, size_region-1, \
+                sizeof(Edge), compare_edge);
 
-    //     for (int j = 0; j < size_region-1; j++)
-    //     {
-    //         int s = new_roads[j].get_start();
-    //         int e = new_roads[j].get_end ();
-    //         int w = new_roads[j].get_weight ();
-    //         if (s < e)
-    //             printf("[%d,%d,%d]", s, e, w);
-    //         else
-    //             printf("[%d,%d,%d]", e, s, w);
+        for (int j = 0; j < size_region-1; j++)
+        {
+            int s = new_roads[j].get_start();
+            int e = new_roads[j].get_end ();
+            int w = new_roads[j].get_weight ();
+            if (s < e)
+                printf("[%d,%d,%d]", s, e, w);
+            else
+                printf("[%d,%d,%d]", e, s, w);
                 
-    //         if (j == size_region - 2)
-    //             printf("\n");
-    //         else
-    //             printf(",\n");
-    //     }
-    //     if (i == num_real_regions - 1)
-    //         printf("]\n");
-    //     else
-    //         printf("],\n");
-    // }
-    // printf("]\n");
+            if (j == size_region - 2)
+                printf("\n");
+            else
+                printf(",\n");
+        }
+        if (i == num_real_regions - 1)
+            printf("]\n");
+        else
+            printf("],\n");
+    }
+    printf("]\n");
 }

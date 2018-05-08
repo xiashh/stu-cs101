@@ -69,6 +69,7 @@ struct Node
     int height = 0, size = 1;
     Node * root;
     Edge * head;
+    Edge * tail;
     int min_index;
     bool operator< (const Node & op) const
     {
@@ -93,21 +94,22 @@ struct Node
 void edge_push_back (Node * a, Edge * b)
 {
     Edge * next = a->root->head;
-    Edge * last = nullptr;
 
     if (next == nullptr)
     {
         a->root->head = b;
+        a->root->tail = b;
         return;
     }
 
-    while (next)
-    {      
-        last = next;
-        next = next->next;
-    }
+    a->root->tail->next = b;
+    Edge * current = b;
 
-    last->next = b;
+    while (current)
+    {
+        a->root->tail = current;
+        current = current->next;
+    }
 }
 
 void print_edges(Node * a)
