@@ -18,6 +18,7 @@ struct Edge
 {
     int start, end;
     int weight;
+    Edge * next;
     bool operator> (const Edge& op) const 
     {
         if (weight > op.weight)
@@ -65,7 +66,6 @@ struct Node
 {
     int index;
     int height = 0, size = 1;
-    Node * list;
     Node * root;
     Edge * edge;
     int min_index;
@@ -89,24 +89,36 @@ struct Node
     };
 };
 
-void push_back (Node * a, Node *b)
+void edge_push_back (Node * a, Edge * b)
 {
-    Node * next= a->list;
-    Node * last = nullptr;
+    Edge * next = a->root->edge;
+    Edge * last = nullptr;
 
     if (next == nullptr)
     {
-        a->list = b;
+        a->root->edge = b;
         return;
     }
 
     while (next)
-    {
+    {      
         last = next;
-        next = next->list;
+        next = next->next;
     }
 
-    last->list = b;
+    last->next = b;
+}
+
+void print_edges(Node * a)
+{
+    Edge * current = a->edge;
+    cout <<"all edges of "<<a->index<< endl;
+    while (current)
+    {
+        cout << current->start << ' '<< current->end;
+        cout << ' '<<current->weight<<endl;
+        current = current->next;
+    }
 }
 
 class disjoint_set
@@ -125,7 +137,6 @@ class disjoint_set
                 nodes[i] = new Node;
                 nodes[i]->index = i;
                 nodes[i]->root = nodes[i];
-                nodes[i]->list = nullptr;
                 nodes[i]->min_index = i;
             }
         }
@@ -162,31 +173,32 @@ class disjoint_set
         {
             Node * node1 = find(i);
             Node * node2 = find(j);
+            // cout << node1->size << ' '<<node2->size<<endl;
             if (node1->index == node2->index)
                 return;
             else
             {
                 if (node1->height > node2->height)
                 {
-                    node2->root = node1;
-                    push_back (node1, node2);
+                    node2->root = node1->root;
+                    edge_push_back (node1, node2->edge);
                     node1->size += node2->size;
                     node1->min_index = min(node1->min_index, node2->min_index);
                 }
                 else if (node1->height < node2->height)
                 {
-                    node1->root = node2;
-                    push_back (node2,node1);
+                    node1->root = node2->root;
+                    edge_push_back (node2, node1->edge);                  
                     node2->size += node1->size;
                     node2->min_index = min(node1->min_index, node2->min_index);
                 }
                 else
                 {
-                    node2->root = node1;
-                    push_back (node1, node2);
+                    node2->root = node1->root;
+                    edge_push_back (node1, node2->edge);                   
                     node1->size += node2->size;
-                    node1->height++;
                     node1->min_index = min(node1->min_index, node2->min_index);
+                    node1->height++;
                 }
             }
             size--;
@@ -297,7 +309,7 @@ int compare_region (const void * a, const void * b)
 
 int compare_edge (const void * a, const void * b)
 {
-    return *(Edge*)b < *(Edge*)a;
+    return *(Edge*)a < *(Edge*)b;
 }
 
 void create_roads (disjoint_set * set)
@@ -327,13 +339,13 @@ void create_roads (disjoint_set * set)
         sp = new_road->start;
         ep = new_road->end;
         w = new_road->weight;     
-        // cout << set->find (sp)->index << ' '<<set->find (ep)->index<<endl;
         if (set->find (sp)->index != set->find (ep)->index)
         {
-            set->get_node (sp)->edge = new Edge;
-            set->get_node (sp)->edge->start = sp;
-            set->get_node (sp)->edge->end = ep;
-            set->get_node (sp)->edge->weight = w;            
+            Edge * new_edge = new Edge;
+            new_edge->start = sp;
+            new_edge->end = ep;
+            new_edge->weight = w;    
+            edge_push_back (set->get_node (sp), new_edge);
             set->set_union (sp, ep);
         }
     }
@@ -352,19 +364,46 @@ void print_roads (disjoint_set * set)
             if (set->find(j)->index == j)
             {
                 region[i++] = *set->get_node(j);
+                // cout << region[i-1].size << endl;
             }
         }
     }
 
     qsort (region, num_real_regions, sizeof(Node), compare_region);
+    printf("[\n");
     for (int i = 0; i < num_real_regions; i++)
     {
-        Node * root = &region[i];
-        Node * curr = root;
-        Edge edges[root->size-1];
+        printf("[\n");
+        Edge * current = region[i].edge;
+        int num = region[i].size-1;
+        Edge roads[num];
+        for (int j = 0; j < num; j++)
+        {
+            roads[j] = *current;
+            current = current->next;
+        }
+        qsort (roads, num, sizeof(Edge), compare_edge);
 
-        for ()
+        for (int j = 0; j < num; j++)
+        {
+            int s = roads[j].start;
+            int e = roads[j].end;
+            int w = roads[j].weight;
+            if (s < e)
+                printf("[%d,%d,%d]", s, e, w);
+            else
+                printf("[%d,%d,%d]", e, s, w);
+            if (j == num-1)
+                printf("\n");
+            else
+                printf(",\n");
+        }
+        if (i == num_real_regions-1)
+            printf("]\n");
+        else
+            printf("],\n");
     }
+    printf("]\n");
 }
 
 int main ()
