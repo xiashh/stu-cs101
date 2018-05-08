@@ -1,10 +1,10 @@
 import random
 
 
-num_nodes = 10000
-num_edges = 10000
-max_dis = 12379
-max_regions = 1
+num_nodes = 1000
+num_edges = 1000
+max_dis = 123
+max_regions = 4
 
 print(num_nodes)
 print(num_edges)
