@@ -5,6 +5,7 @@
 #include <sstream>
 #include <stdlib.h>
 #include <stdio.h>
+#include <time.h>
 
 using namespace std;
 
@@ -67,7 +68,7 @@ struct Node
     int index;
     int height = 0, size = 1;
     Node * root;
-    Edge * edge;
+    Edge * head;
     int min_index;
     bool operator< (const Node & op) const
     {
@@ -91,12 +92,12 @@ struct Node
 
 void edge_push_back (Node * a, Edge * b)
 {
-    Edge * next = a->root->edge;
+    Edge * next = a->root->head;
     Edge * last = nullptr;
 
     if (next == nullptr)
     {
-        a->root->edge = b;
+        a->root->head = b;
         return;
     }
 
@@ -111,7 +112,7 @@ void edge_push_back (Node * a, Edge * b)
 
 void print_edges(Node * a)
 {
-    Edge * current = a->edge;
+    Edge * current = a->head;
     cout <<"all edges of "<<a->index<< endl;
     while (current)
     {
@@ -181,21 +182,21 @@ class disjoint_set
                 if (node1->height > node2->height)
                 {
                     node2->root = node1->root;
-                    edge_push_back (node1, node2->edge);
+                    edge_push_back (node1, node2->head);
                     node1->size += node2->size;
                     node1->min_index = min(node1->min_index, node2->min_index);
                 }
                 else if (node1->height < node2->height)
                 {
                     node1->root = node2->root;
-                    edge_push_back (node2, node1->edge);                  
+                    edge_push_back (node2, node1->head);                  
                     node2->size += node1->size;
                     node2->min_index = min(node1->min_index, node2->min_index);
                 }
                 else
                 {
                     node2->root = node1->root;
-                    edge_push_back (node1, node2->edge);                   
+                    edge_push_back (node1, node2->head);                   
                     node1->size += node2->size;
                     node1->min_index = min(node1->min_index, node2->min_index);
                     node1->height++;
@@ -356,6 +357,7 @@ void print_roads (disjoint_set * set)
     int num_real_regions = set->get_size ();
     Node region[num_real_regions];
 
+
     // obtain roots
     for (int i = 0; i < num_real_regions;)
     {
@@ -374,7 +376,7 @@ void print_roads (disjoint_set * set)
     for (int i = 0; i < num_real_regions; i++)
     {
         printf("[\n");
-        Edge * current = region[i].edge;
+        Edge * current = region[i].head;
         int num = region[i].size-1;
         Edge roads[num];
         for (int j = 0; j < num; j++)
@@ -411,7 +413,7 @@ int main ()
     cin >> num_cities >> num_roads >> num_regions;
 
     disjoint_set * city_set = new disjoint_set(num_cities);
-
+    
     create_roads (city_set);
     print_roads (city_set);
 }
